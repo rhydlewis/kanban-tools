@@ -1,0 +1,5 @@
+username: <username>
+password: <password>
+max_results: 550
+jira: <root URL for Jira>
+use_ssl: true

@@ -36,6 +36,8 @@ build/
 # unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
 .rvmrc
 
+.idea
+
 # ignore user defined jira-settings
-jira-settings.yaml
-statuses.yaml
+jira/jira-settings.yaml
+jira/statuses.yaml
