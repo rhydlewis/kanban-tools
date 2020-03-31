@@ -1,5 +1,4 @@
 username: admin
 password: admin
-max_results: 550
-jira: http://localhost:8080/
-use_ssl: false
+jira: https://localhost:8080/
+use_ssl: true

@@ -1,5 +1,5 @@
 #! /usr/bin/env ruby
-require 'jira'
+require 'jira-ruby'
 require 'yaml'
 require 'table_print'
 require 'json'
@@ -38,16 +38,22 @@ class History
     @logger.info("Running query: '#{@query}'")
     output = []
 
-    run_query(@query).each { |issue|
-      desc = describe_issue(issue)
-      history = find_history(desc[:key])
-      @statuses.each { |status, use_first|
-        date = transition_date(history, status, use_first)
-        desc[status] = date
-      }
+    # hack to avoid problem of JIRA API returning max 100 results at a time
+    offsets = [0, 100, 200, 300, 400, 500]
 
-      output << desc
-    }
+    offsets.each do |offset|
+      run_query(@query, offset).each { |issue|
+        desc = describe_issue(issue)
+        history = find_history(desc[:key])
+        @statuses.each { |status, use_first|
+          date = transition_date(history, status, use_first)
+          desc[status] = date
+        }
+
+        output << desc
+      }
+    end
+
 
     if @options[:format] == JSON_FORMAT
       display_results_as_json(output)
@@ -147,6 +153,7 @@ class History
   end
 
   def find_history(key)
+    @logger.info("Processing #{key}")
     status_changes = {}
     changelog = @client.Issue.find(key, :expand => CHANGELOG).changelog
     changelog[HISTORIES].each { |history|
@@ -155,6 +162,7 @@ class History
           date = DateTime.strptime(history[CREATED], DATE_FMT)
           status = item[TO_STR]
           status_changes[status] = { :dates => []} unless status_changes.include?(status)
+          @logger.warn("Found missing status #{status}") unless status_changes.include?(status)
           @logger.debug("Adding #{date} to '#{status}'")
           status_changes[status][:dates] << date
         end

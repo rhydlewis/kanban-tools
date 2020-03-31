@@ -17,18 +17,19 @@ module JiraConstants
 
   def init_config
     @logger = Logger.new(STDOUT)
-    @logger.sev_threshold = Logger::INFO
+    @logger.sev_threshold = Logger::DEBUG
     @logger.datetime_format = '%Y-%m-%d %H:%M:%S'
 
     @config = YAML.load(File.read('./jira-settings.yaml'))
 
     @client_options = {
-        :username => @config['username'],
-        :password => @config['password'],
-        :site => @config['jira'],
-        :auth_type => :basic,
-        :context_path => '',
-        :use_ssl => @config['use_ssl']
+        :username           => @config['username'],
+        :password           => @config['password'],
+        :site               => @config['jira'],
+        :context_path       => '',
+        :auth_type          => :basic,
+        :use_ssl            => true,
+        :max_results        => 500
     }
 
     @logger.debug("Client options - username: #{@client_options[:username]}, site: #{@client_options[:site]}")
@@ -40,11 +41,12 @@ module JiraConstants
     }
   end
 
-  def run_query(query)
+  def run_query(query, offset)
+    @query_options[:start_at] = offset
     @client = JIRA::Client.new(@client_options)
     issues = @client.Issue.jql(query, @query_options)
     @logger.info("Found #{issues.size.to_s} issue(s)")
-    return issues
+    issues
   end
 
   def describe_issue(issue)
